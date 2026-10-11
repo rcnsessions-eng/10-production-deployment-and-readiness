@@ -1,6 +1,6 @@
 # Verified Non-Production Deployment
 
-PRD 10 capstone only. Compose project `zero-trust-deployment-readiness` supplies offline operational checks; Kubernetes runs the integrated API, official stdio MCP adapter, OPA, IdP fixture and private collector. Earlier business code is inherited, never rewritten here.
+Deployment-readiness capstone only. Compose project `zero-trust-deployment-readiness` supplies offline operational checks; Kubernetes runs the integrated API, official stdio MCP adapter, OPA, IdP fixture and private collector. Earlier business code is inherited, never rewritten here.
 
 ## Run
 
@@ -14,7 +14,7 @@ Supported test environment: macOS ARM64, Docker Engine 29.1.3/Compose 2.40.3, ho
 
 Startup builds prior dependencies, retains or initializes ignored synthetic secrets, tests tooling, creates/reuses only the owned disposable cluster, runs scans/SBOM/signing/verification, deploys the verified release and runs real smoke. The gate makes OPA unavailable, proves writes return 503/no receipt, rolls back the smoke-verified release configuration and reruns security/incident reconstruction.
 
-Dedicated kubeconfig: PRD 06's ignored artifacts directory. New cluster name `zero-trust-workload-security`; historical `zero-trust-prd06` is explicitly supported without recreation. User context `lcp-development-1.33` stays untouched. No unrelated cleanup/pruning was performed.
+Dedicated kubeconfig: the Istio workload-security workshop's ignored artifacts directory. New cluster name `zero-trust-workload-security`; the historical cluster name recorded in the existing kubeconfig is explicitly supported without recreation. User context `lcp-development-1.33` stays untouched. No unrelated cleanup/pruning was performed.
 
 ## Operations
 
@@ -34,15 +34,15 @@ Checks cover allowed progress, foreign denial, spoofed/wrong/missing tokens, fou
 Cleanup deletes the whole owned disposable cluster, including prior mesh fixtures. It was not executed and requires confirmation matching the actual name:
 
 ```bash
-CONFIRM_CLUSTER_DELETE=zero-trust-prd06 bash scripts/cleanup.sh
+CONFIRM_CLUSTER_DELETE=zero-trust-workload-security bash scripts/cleanup.sh
 ```
 
-Use `zero-trust-workload-security` for a new descriptive-name cluster. Retain evidence before deliberate cleanup; this does not authorize deleting any other cluster.
+For an existing historical cluster, substitute the actual owned cluster name from its dedicated kubeconfig. Retain evidence before deliberate cleanup; this does not authorize deleting any other cluster.
 
 ## Evidence and Limits
 
 Seven tests cover guards, verified rollback, trace grouping and clean MCP manifest replacement; Ruff/format and strict types cover five scripts. Admission/Istio validation, verified release rollout, real identity/MCP/mesh/telemetry and incident reconstruction passed. Policy fault returned 503/no receipt; rollback restored 200/receipt twice. This tests configuration rollback on the same verified image, not a malicious binary. The first single-command replay exposed stale pod readiness after image mutation; clean standalone-pod replacement fixed it and live smoke passed. Final single-command results are recorded in shared implementation status.
 
-Ignored `artifacts/known-good.json`, `incident-reconstruction.json` and `rollback-evidence.json` record release/revision, sanitized trace/layers and fault/recovery. Signed archive/SBOM/scans/provenance are in PRD 09 artifacts. Hosted CI/keyless signing, a second fresh capstone cluster and cleanup were not executed. Original PRD 06 cluster bootstrap was executed earlier.
+Ignored `artifacts/known-good.json`, `incident-reconstruction.json` and `rollback-evidence.json` record release/revision, sanitized trace/layers and fault/recovery. Signed archive/SBOM/scans/provenance are in the supply-chain workshop's artifacts. Hosted CI/keyless signing, a second fresh capstone cluster and cleanup were not executed. Original workload-security cluster bootstrap was executed earlier.
 
 This is a verified non-production reference, not production-ready infrastructure. See [deployment guide](docs/deployment-guide.md), [operations runbook](docs/operations-runbook.md), [threat model](docs/threat-model.md) and [release checklist](docs/release-checklist.md).
