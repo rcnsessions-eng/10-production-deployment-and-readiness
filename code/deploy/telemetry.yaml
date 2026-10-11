@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: learning-telemetry, namespace: learning-mesh}
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata: {name: collector, namespace: learning-mesh}
+spec:
+  selector: {app: learning-telemetry}
+  ports: [{name: http-otlp, port: 4318, targetPort: 4318}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: collector, namespace: learning-mesh}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: learning-telemetry}}
+  template:
+    metadata: {labels: {app: learning-telemetry, version: "0.162.0"}}
+    spec:
+      serviceAccountName: learning-telemetry
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: collector
+          image: otel/opentelemetry-collector:0.162.0@sha256:310a800ad69ee430e7c541796852a242c9c7db97aaad4daa5ccf843c525fbdb2
+          args: [--config=/etc/otelcol/config.yaml]
+          ports: [{containerPort: 4318}]
+          readinessProbe: {tcpSocket: {port: 4318}, initialDelaySeconds: 2, periodSeconds: 3}
+          livenessProbe: {tcpSocket: {port: 4318}, initialDelaySeconds: 10, periodSeconds: 10}
+          resources: {requests: {cpu: 25m, memory: 64Mi}, limits: {cpu: "1", memory: 128Mi}}
+          securityContext: {readOnlyRootFilesystem: true, allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+          volumeMounts: [{name: config, mountPath: /etc/otelcol, readOnly: true}]
+      volumes: [{name: config, configMap: {name: learning-telemetry}}]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: {name: collector-approved-exporters-only, namespace: learning-mesh}
+spec:
+  selector: {matchLabels: {app: learning-telemetry}}
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - learning.local/ns/learning-mesh/sa/learning-gateway
+              - learning.local/ns/learning-mesh/sa/learning-mcp
+      to:
+        - operation:
+            ports: ["4318"]
+            methods: [POST]
+            paths: [/v1/traces, /v1/metrics]

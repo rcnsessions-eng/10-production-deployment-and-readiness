@@ -1,0 +1,12 @@
+name: zero-trust-deployment-readiness
+services:
+  checks:
+    image: zero-trust-deployment-readiness-checks:0.1.0
+    build:
+      context: ../..
+      dockerfile: 10-production-deployment-and-readiness/code/Dockerfile
+    network_mode: none
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]

@@ -1,0 +1,5 @@
+# Non-Production Deployment Plan
+
+Supported environment: the owned kind 0.33.0/Kubernetes 1.35.8 cluster, Istio 1.31.1, synthetic Keycloak 26.0.7 fixture, pinned OPA 1.21.1, verified PRD 09 Python 3.12.15/Alpine release, and collector 0.162.0. No existing user development cluster is a deployment target.
+
+Verify the signed release manifest, image identity, bound artifact hashes and strict scan thresholds before mutations. Reuse PRD 06's declared namespace, identities, OPA policies and fixture bootstrap. Add a dedicated collector identity with strict mTLS and exact exporter peer/path rules; deploy the verified API and MCP image under an archive-derived immutable local tag. Run positive/negative mesh, identity, MCP, authorization and telemetry tests. Record a known-good deployment revision, introduce a deliberately unavailable policy endpoint, prove writes fail closed, and roll back that configuration to the verified release. Document observed results, remaining operational limits and explicit cleanup confirmation.
